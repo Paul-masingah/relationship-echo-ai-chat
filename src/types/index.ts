@@ -1,4 +1,3 @@
-
 export interface Relationship {
   id: string;
   name: string;
@@ -14,6 +13,7 @@ export interface Message {
   content: string;
   role: 'user' | 'assistant';
   timestamp: Date;
+  autoplay?: boolean;
 }
 
 export interface Conversation {

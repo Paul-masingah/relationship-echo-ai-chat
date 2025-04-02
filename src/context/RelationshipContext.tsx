@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Relationship, Conversation, Message, ReflectionSummary, ConversationPhase } from '@/types';
 import { v4 as uuidv4 } from 'uuid';
@@ -12,7 +11,7 @@ interface RelationshipContextType {
   addRelationship: (relationship: Omit<Relationship, 'id'>) => Relationship;
   setActiveRelationship: (relationshipId: string | null) => void;
   startConversation: (relationshipId: string) => void;
-  addMessage: (content: string, role: 'user' | 'assistant') => void;
+  addMessage: (content: string, role: 'user' | 'assistant', autoplay?: boolean) => void;
   advancePhase: () => void;
   toggleRecording: () => void;
   addReflectionSummary: (summary: Omit<ReflectionSummary, 'id' | 'timestamp'>) => void;
@@ -27,7 +26,6 @@ export function RelationshipProvider({ children }: { children: React.ReactNode }
   const [isRecording, setIsRecording] = useState(false);
   const [reflectionSummaries, setReflectionSummaries] = useState<ReflectionSummary[]>([]);
 
-  // Load data from localStorage on initial render
   useEffect(() => {
     const storedRelationships = localStorage.getItem('relationships');
     const storedSummaries = localStorage.getItem('reflectionSummaries');
@@ -41,7 +39,6 @@ export function RelationshipProvider({ children }: { children: React.ReactNode }
     }
   }, []);
 
-  // Save data to localStorage whenever it changes
   useEffect(() => {
     localStorage.setItem('relationships', JSON.stringify(relationships));
   }, [relationships]);
@@ -81,14 +78,15 @@ export function RelationshipProvider({ children }: { children: React.ReactNode }
     setActiveConversation(newConversation);
   };
 
-  const addMessage = (content: string, role: 'user' | 'assistant') => {
+  const addMessage = (content: string, role: 'user' | 'assistant', autoplay: boolean = false) => {
     if (!activeConversation) return;
     
     const newMessage: Message = {
       id: uuidv4(),
       content,
       role,
-      timestamp: new Date()
+      timestamp: new Date(),
+      autoplay
     };
     
     setActiveConversation({

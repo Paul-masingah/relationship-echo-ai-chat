@@ -1,9 +1,11 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Message } from '@/types';
-import { Bot, User } from 'lucide-react';
+import { Bot, User, Volume2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
+import { SpeechSynthesis } from './SpeechSynthesis';
+import { Button } from '@/components/ui/button';
 
 interface ChatMessageProps {
   message: Message;
@@ -11,6 +13,7 @@ interface ChatMessageProps {
 
 export function ChatMessage({ message }: ChatMessageProps) {
   const isAssistant = message.role === 'assistant';
+  const [isPlaying, setIsPlaying] = useState(false);
   
   return (
     <div className={cn(
@@ -31,8 +34,20 @@ export function ChatMessage({ message }: ChatMessageProps) {
           <div className="text-xs text-muted-foreground">
             {format(new Date(message.timestamp), 'h:mm a')}
           </div>
+          {isAssistant && (
+            <div className="ml-auto">
+              <SpeechSynthesis 
+                text={message.content}
+                autoPlay={message.autoplay || false}
+                onPlayingChange={setIsPlaying}
+              />
+            </div>
+          )}
         </div>
-        <div className="prose prose-sm max-w-none">
+        <div className={cn(
+          "prose prose-sm max-w-none",
+          isPlaying && "text-primary"
+        )}>
           {message.content}
         </div>
       </div>

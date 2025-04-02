@@ -1,12 +1,10 @@
-
 import React, { useState, useEffect } from 'react';
-import { Mic, MicOff, Send, Wand2 } from 'lucide-react';
+import { Mic, MicOff, Send, Wand2, Volume2, VolumeX } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useRelationship } from '@/context/RelationshipContext';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 
-// Mock response generator
 function generateResponse(message: string, relationship: string, phase: string): string {
   const responses = {
     onboarding: [
@@ -52,6 +50,10 @@ export function VoiceInput() {
   const [transcription, setTranscription] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [recordingVolume, setRecordingVolume] = useState<number[]>([0.5, 0.3, 0.6, 0.8, 0.4]);
+  const [voiceEnabled, setVoiceEnabled] = useState(() => {
+    const saved = localStorage.getItem('echo-voice-enabled');
+    return saved !== null ? saved === 'true' : true;
+  });
 
   const handleSendMessage = () => {
     if (!userInput.trim() && !transcription.trim()) return;
@@ -63,17 +65,16 @@ export function VoiceInput() {
     setTranscription('');
     setIsProcessing(true);
     
-    // Simulate AI response
     setTimeout(() => {
       const response = generateResponse(
         message, 
         activeRelationship.name,
         activeConversation.phase
       );
-      addMessage(response, 'assistant');
+      
+      addMessage(response, 'assistant', voiceEnabled);
       setIsProcessing(false);
       
-      // Check if we should advance to the next phase (every 4 message exchanges)
       if (activeConversation.messages.length % 8 === 6) {
         advancePhase();
         toast.info(`Moving to next phase: ${getNextPhase(activeConversation.phase)}`);
@@ -108,7 +109,13 @@ export function VoiceInput() {
     return 'Final Phase';
   };
 
-  // Simulate microphone audio levels
+  const toggleVoice = () => {
+    const newState = !voiceEnabled;
+    setVoiceEnabled(newState);
+    localStorage.setItem('echo-voice-enabled', newState.toString());
+    toast.info(newState ? "Voice responses enabled" : "Voice responses disabled");
+  };
+
   useEffect(() => {
     if (isRecording) {
       const interval = setInterval(() => {
@@ -125,7 +132,6 @@ export function VoiceInput() {
     }
   }, [isRecording]);
 
-  // Mock voice transcription
   useEffect(() => {
     if (isRecording) {
       const mockPhrases = [
@@ -142,7 +148,7 @@ export function VoiceInput() {
       
       const timeout = setTimeout(() => {
         setTranscription(randomPhrase);
-        toggleRecording(); // Stop recording after getting "transcription"
+        toggleRecording();
       }, 3000);
       
       return () => clearTimeout(timeout);
@@ -173,6 +179,15 @@ export function VoiceInput() {
           onKeyDown={handleKeyDown}
         />
         <div className="flex gap-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={toggleVoice}
+            className="text-muted-foreground"
+            title={voiceEnabled ? "Disable voice responses" : "Enable voice responses"}
+          >
+            {voiceEnabled ? <Volume2 className="h-5 w-5" /> : <VolumeX className="h-5 w-5" />}
+          </Button>
           <Button
             variant={isRecording ? "destructive" : "secondary"}
             size="icon"
