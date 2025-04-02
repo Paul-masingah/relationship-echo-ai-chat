@@ -17,7 +17,9 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useRelationship } from '@/context/RelationshipContext';
 import { toast } from 'sonner';
+import { Relationship } from '@/types';
 
+// Make sure the schema matches what's required in Relationship type
 const relationshipSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   relationshipType: z.string().min(1, 'Relationship type is required'),
@@ -46,7 +48,17 @@ export function RelationshipForm() {
   });
 
   const onSubmit = (data: RelationshipFormValues) => {
-    const newRelationship = addRelationship(data);
+    // Ensure all required fields are present - though zodResolver should already handle this
+    const relationshipData: Omit<Relationship, 'id'> = {
+      name: data.name,
+      relationshipType: data.relationshipType,
+      timeKnown: data.timeKnown,
+      interactionFrequency: data.interactionFrequency,
+      meetingStory: data.meetingStory,
+      lastInteraction: data.lastInteraction,
+    };
+    
+    const newRelationship = addRelationship(relationshipData);
     toast.success(`Added ${data.name} to your relationships`);
     navigate(`/relationships/${newRelationship.id}`);
   };
