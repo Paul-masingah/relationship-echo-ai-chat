@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { Relationship, Conversation, Message, ReflectionSummary } from '@/types';
+import { Relationship, Conversation, Message, ReflectionSummary, ConversationPhase } from '@/types';
 import { v4 as uuidv4 } from 'uuid';
 
 interface RelationshipContextType {

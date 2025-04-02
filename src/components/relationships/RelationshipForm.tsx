@@ -23,6 +23,8 @@ const relationshipSchema = z.object({
   relationshipType: z.string().min(1, 'Relationship type is required'),
   timeKnown: z.string().optional(),
   interactionFrequency: z.string().optional(),
+  meetingStory: z.string().optional(),
+  lastInteraction: z.string().optional(),
 });
 
 type RelationshipFormValues = z.infer<typeof relationshipSchema>;
@@ -38,6 +40,8 @@ export function RelationshipForm() {
       relationshipType: '',
       timeKnown: '',
       interactionFrequency: '',
+      meetingStory: '',
+      lastInteraction: '',
     },
   });
 
