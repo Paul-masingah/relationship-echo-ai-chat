@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 export function ChatContainer() {
-  const { activeConversation, activeRelationship, isRecording } = useRelationship();
+  const { activeConversation, activeRelationship, isRecording, toggleRecording } = useRelationship();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [showScrollButton, setShowScrollButton] = useState(false);
