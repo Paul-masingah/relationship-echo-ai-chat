@@ -6,6 +6,7 @@ import { Layout } from './components/layout/Layout';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { ScrollToTop } from './components/layout/ScrollToTop';
 
 import HomePage from "./pages/HomePage";
 import AddRelationshipPage from "./pages/AddRelationshipPage";
@@ -20,8 +21,9 @@ const App = () => (
     <RelationshipProvider>
       <TooltipProvider>
         <Toaster />
-        <Sonner />
+        <Sonner position="top-right" closeButton />
         <BrowserRouter>
+          <ScrollToTop />
           <Routes>
             <Route element={<Layout />}>
               <Route path="/" element={<HomePage />} />

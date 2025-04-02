@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -18,6 +18,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useRelationship } from '@/context/RelationshipContext';
 import { toast } from 'sonner';
 import { Relationship } from '@/types';
+import { ArrowLeft, UserCheck } from 'lucide-react';
 
 // Make sure the schema matches what's required in Relationship type
 const relationshipSchema = z.object({
@@ -34,6 +35,7 @@ type RelationshipFormValues = z.infer<typeof relationshipSchema>;
 export function RelationshipForm() {
   const { addRelationship } = useRelationship();
   const navigate = useNavigate();
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   const form = useForm<RelationshipFormValues>({
     resolver: zodResolver(relationshipSchema),
@@ -48,6 +50,8 @@ export function RelationshipForm() {
   });
 
   const onSubmit = (data: RelationshipFormValues) => {
+    setIsSubmitting(true);
+    
     // Ensure all required fields are present - though zodResolver should already handle this
     const relationshipData: Omit<Relationship, 'id'> = {
       name: data.name,
@@ -58,22 +62,35 @@ export function RelationshipForm() {
       lastInteraction: data.lastInteraction,
     };
     
-    const newRelationship = addRelationship(relationshipData);
-    toast.success(`Added ${data.name} to your relationships`);
-    navigate(`/relationships/${newRelationship.id}`);
+    setTimeout(() => {
+      const newRelationship = addRelationship(relationshipData);
+      toast.success(`Added ${data.name} to your relationships`, {
+        description: "You can now start a conversation to reflect on this relationship.",
+        action: {
+          label: "View",
+          onClick: () => navigate(`/relationships/${newRelationship.id}`),
+        },
+      });
+      navigate(`/relationships/${newRelationship.id}`);
+      setIsSubmitting(false);
+    }, 800);
   };
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 animate-fade-in">
         <FormField
           control={form.control}
           name="name"
           render={({ field }) => (
-            <FormItem>
+            <FormItem className="animate-slide-up">
               <FormLabel>Name</FormLabel>
               <FormControl>
-                <Input placeholder="Enter their name" {...field} />
+                <Input 
+                  placeholder="Enter their name" 
+                  {...field} 
+                  className="transition-all focus-within:ring-2 focus-within:ring-primary/20"
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -84,14 +101,14 @@ export function RelationshipForm() {
           control={form.control}
           name="relationshipType"
           render={({ field }) => (
-            <FormItem>
+            <FormItem className="animate-slide-up" style={{ animationDelay: '0.1s' }}>
               <FormLabel>Relationship Type</FormLabel>
               <Select 
                 onValueChange={field.onChange} 
                 defaultValue={field.value}
               >
                 <FormControl>
-                  <SelectTrigger>
+                  <SelectTrigger className="transition-all focus-within:ring-2 focus-within:ring-primary/20">
                     <SelectValue placeholder="Select relationship type" />
                   </SelectTrigger>
                 </FormControl>
@@ -113,14 +130,14 @@ export function RelationshipForm() {
           control={form.control}
           name="timeKnown"
           render={({ field }) => (
-            <FormItem>
+            <FormItem className="animate-slide-up" style={{ animationDelay: '0.2s' }}>
               <FormLabel>How long have you known them?</FormLabel>
               <Select 
                 onValueChange={field.onChange} 
                 defaultValue={field.value}
               >
                 <FormControl>
-                  <SelectTrigger>
+                  <SelectTrigger className="transition-all focus-within:ring-2 focus-within:ring-primary/20">
                     <SelectValue placeholder="Select time" />
                   </SelectTrigger>
                 </FormControl>
@@ -141,14 +158,14 @@ export function RelationshipForm() {
           control={form.control}
           name="interactionFrequency"
           render={({ field }) => (
-            <FormItem>
+            <FormItem className="animate-slide-up" style={{ animationDelay: '0.3s' }}>
               <FormLabel>How often do you interact?</FormLabel>
               <Select 
                 onValueChange={field.onChange} 
                 defaultValue={field.value}
               >
                 <FormControl>
-                  <SelectTrigger>
+                  <SelectTrigger className="transition-all focus-within:ring-2 focus-within:ring-primary/20">
                     <SelectValue placeholder="Select frequency" />
                   </SelectTrigger>
                 </FormControl>
@@ -165,15 +182,35 @@ export function RelationshipForm() {
           )}
         />
         
-        <div className="flex justify-end gap-4">
+        <div className="flex justify-between gap-4 pt-4 animate-slide-up" style={{ animationDelay: '0.4s' }}>
           <Button 
             type="button" 
             variant="outline" 
             onClick={() => navigate(-1)}
+            className="hover:bg-transparent hover:text-primary transition-colors"
           >
-            Cancel
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back
           </Button>
-          <Button type="submit">Add Relationship</Button>
+          
+          <Button 
+            type="submit" 
+            className="relative overflow-hidden group transition-all" 
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? (
+              <>
+                <div className="h-4 w-4 rounded-full border-2 border-white border-r-transparent animate-spin mr-2"></div>
+                Adding...
+              </>
+            ) : (
+              <>
+                <UserCheck className="mr-2 h-4 w-4" />
+                Add Relationship
+                <span className="absolute bottom-0 left-0 h-1 bg-white/20 group-hover:w-full w-0 transition-all duration-300"></span>
+              </>
+            )}
+          </Button>
         </div>
       </form>
     </Form>

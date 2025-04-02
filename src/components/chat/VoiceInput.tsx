@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Mic, MicOff, Send } from 'lucide-react';
+import { Mic, MicOff, Send, Wand2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useRelationship } from '@/context/RelationshipContext';
 import { Textarea } from '@/components/ui/textarea';
@@ -50,6 +50,8 @@ export function VoiceInput() {
   const { activeConversation, activeRelationship, isRecording, toggleRecording, addMessage, advancePhase } = useRelationship();
   const [userInput, setUserInput] = useState('');
   const [transcription, setTranscription] = useState('');
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [recordingVolume, setRecordingVolume] = useState<number[]>([0.5, 0.3, 0.6, 0.8, 0.4]);
 
   const handleSendMessage = () => {
     if (!userInput.trim() && !transcription.trim()) return;
@@ -59,6 +61,7 @@ export function VoiceInput() {
     addMessage(message, 'user');
     setUserInput('');
     setTranscription('');
+    setIsProcessing(true);
     
     // Simulate AI response
     setTimeout(() => {
@@ -68,13 +71,14 @@ export function VoiceInput() {
         activeConversation.phase
       );
       addMessage(response, 'assistant');
+      setIsProcessing(false);
       
       // Check if we should advance to the next phase (every 4 message exchanges)
       if (activeConversation.messages.length % 8 === 6) {
         advancePhase();
         toast.info(`Moving to next phase: ${getNextPhase(activeConversation.phase)}`);
       }
-    }, 1000);
+    }, 1500);
   };
 
   const getNextPhase = (currentPhase: string) => {
@@ -104,6 +108,23 @@ export function VoiceInput() {
     return 'Final Phase';
   };
 
+  // Simulate microphone audio levels
+  useEffect(() => {
+    if (isRecording) {
+      const interval = setInterval(() => {
+        setRecordingVolume([
+          Math.random() * 0.5 + 0.3,
+          Math.random() * 0.5 + 0.2,
+          Math.random() * 0.5 + 0.4,
+          Math.random() * 0.5 + 0.3,
+          Math.random() * 0.5 + 0.2,
+        ]);
+      }, 150);
+      
+      return () => clearInterval(interval);
+    }
+  }, [isRecording]);
+
   // Mock voice transcription
   useEffect(() => {
     if (isRecording) {
@@ -128,10 +149,17 @@ export function VoiceInput() {
     }
   }, [isRecording, toggleRecording]);
   
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage();
+    }
+  };
+  
   return (
     <div className="border-t bg-card p-4">
       {transcription && (
-        <div className="mb-2 rounded-md bg-echo-50 p-2 text-sm text-echo-700">
+        <div className="mb-2 rounded-md bg-echo-50 p-2 text-sm text-echo-700 animate-fade-in">
           {transcription}
         </div>
       )}
@@ -139,40 +167,49 @@ export function VoiceInput() {
       <div className="flex items-end gap-2">
         <Textarea
           placeholder="Type your message or click the mic to speak..."
-          className="flex-1 resize-none"
+          className="flex-1 resize-none transition-all focus-within:shadow-md"
           value={userInput}
           onChange={(e) => setUserInput(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-              e.preventDefault();
-              handleSendMessage();
-            }
-          }}
+          onKeyDown={handleKeyDown}
         />
         <div className="flex gap-2">
           <Button
             variant={isRecording ? "destructive" : "secondary"}
             size="icon"
             onClick={toggleRecording}
-            disabled={!!transcription}
+            disabled={!!transcription || isProcessing}
+            className={isRecording ? "animate-pulse" : "hover:scale-105 transition-transform"}
           >
-            {isRecording ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
+            {isRecording ? 
+              <MicOff className="h-5 w-5" /> : 
+              <Mic className="h-5 w-5" />
+            }
           </Button>
-          <Button onClick={handleSendMessage}>
-            <Send className="mr-2 h-4 w-4" />
-            Send
+          <Button 
+            onClick={handleSendMessage}
+            disabled={(!userInput.trim() && !transcription.trim()) || isProcessing}
+            className="hover:scale-105 transition-transform"
+          >
+            {isProcessing ? 
+              <Wand2 className="mr-2 h-4 w-4 animate-spin" /> :
+              <Send className="mr-2 h-4 w-4" />
+            }
+            {isProcessing ? "Processing..." : "Send"}
           </Button>
         </div>
       </div>
       
       {isRecording && (
-        <div className="mt-2 flex justify-center">
-          <div className="flex gap-1">
-            {[1, 2, 3].map((i) => (
+        <div className="mt-4 flex justify-center animate-fade-in">
+          <div className="flex items-end gap-1 h-12">
+            {recordingVolume.map((volume, i) => (
               <div 
                 key={i}
-                className="h-2 w-2 rounded-full bg-echo-500"
-                style={{ animation: `wave 1.5s infinite ${i * 0.2}s` }}
+                className="w-2 bg-echo-500 rounded-full transition-all duration-150"
+                style={{ 
+                  height: `${volume * 100}%`,
+                  animationDuration: `${0.7 + i * 0.1}s`
+                }}
               />
             ))}
           </div>
